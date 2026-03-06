@@ -5,16 +5,26 @@ import Hotel from '../models/hotel.model.js';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 
-// Generate JWT Token
+// ==========================================
+// HELPER: Generate JWT Token
+// A JSON Web Token (JWT) is like a digital wristband. 
+// When a user logs in, we give them this token. They show it to us on future requests 
+// so we know they are authenticated without asking for their password again.
+// ==========================================
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET || 'smart_hotel_booking_system', {
-    expiresIn: process.env.JWT_EXPIRE || '7d',
+    expiresIn: process.env.JWT_EXPIRE || '7d', // Token expires in 7 days
   });
 };
 
-// @desc    Register User
+// ==========================================
+// CONTROLLER: Register User
+// This function handles new users signing up.
+// It checks if they already exist, validates their password, 
+// and then saves them securely into the MongoDB database.
 // @route   POST /api/auth/register
-// @access  Public
+// @access  Public (Anyone can access this)
+// ==========================================
 export const register = async (req, res) => {
   try {
     const { Name, Email, Password, ConfirmPassword, Role, ContactNumber } = req.body;
@@ -77,9 +87,14 @@ export const register = async (req, res) => {
   }
 };
 
-// @desc    Login User
+// ==========================================
+// CONTROLLER: Login User
+// This function verifies a user's email and password.
+// If correct, it generates a JWT token and sends it back to the user's browser 
+// securely hidden inside an HTTP-only Cookie.
 // @route   POST /api/auth/login
 // @access  Public
+// ==========================================
 export const login = async (req, res) => {
   try {
     const { Email, Password } = req.body;
@@ -134,20 +149,24 @@ export const logout = async (req, res) => {
     httpOnly: true,
     expires: new Date(0)
   });
-  
+
   return res.status(200).json({
     success: true,
     message: 'Logged out successfully'
   });
 };
 
-// @desc    Get current user
+// ==========================================
+// CONTROLLER: Get Current User (Me)
+// This function runs whenever the frontend loads to check if the user is already logged in.
+// It uses the ID inside their Token to fetch their full profile from the database.
 // @route   GET /api/auth/me
-// @access  Private
+// @access  Private (Requires a valid token to access)
+// ==========================================
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-Password');
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,

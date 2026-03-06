@@ -23,8 +23,13 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 
 /**
- * App Component
- * Handles the global routing configuration for the application.
+ * ==========================================
+ * App Component (Frontend Root)
+ * ==========================================
+ * This file handles the entire routing configuration for the application using react-router-dom.
+ * React is a "Single Page Application", meaning the browser never actually refreshes.
+ * Instead, the <Routes> component looks at the URL (like "/login" or "/manager") 
+ * and actively swaps out which Component (Page) is currently being displayed on screen.
  */
 const App = () => {
   const navigate = useNavigate();
@@ -33,91 +38,94 @@ const App = () => {
     <ErrorBoundary>
       <div className="app-wrapper">
         <Routes>
-        {/* --- Public Routes --- */}
-        <Route path="/" element={<Home />} />
-        <Route path="/hotelList" element={<HotelList />} />
-        <Route path="/hotel/:id" element={<HotelDetails />} />
+          {/* --- Public Routes (Anyone can see these) --- */}
+          <Route path="/" element={<Home />} />
+          <Route path="/hotelList" element={<HotelList />} />
+          <Route path="/hotel/:id" element={<HotelDetails />} />
 
-        {/* --- Booking Flow (Requires Hotel ID and Room ID) --- */}
-        <Route path="/booking/:hotelId/:roomId" element={<BookingPage />} />
-        <Route path="/booking-success" element={<BookingSuccess />} />
+          {/* --- Booking Flow (Requires specific Hotel ID and Room ID in the URL) --- */}
+          <Route path="/booking/:hotelId/:roomId" element={<BookingPage />} />
+          <Route path="/booking-success" element={<BookingSuccess />} />
 
-        {/* --- User Account & Loyalty --- */}
-        <Route path="/account" element={
-          <ProtectedRoute allowedRoles={['guest', 'manager', 'admin']}>
-            <UserAccount />
-          </ProtectedRoute>
-        } />
-        <Route path="/recentvisit" element={
-          <ProtectedRoute allowedRoles={['guest', 'manager', 'admin']}>
-            <RecentVisit />
-          </ProtectedRoute>
-        } />
+          {/* --- User Account & Loyalty --- */}
+          {/* <ProtectedRoute> acts just like our Backend Middleware! 
+            If the user is NOT logged in, it catches them and redirects them to the /login page
+            instead of letting them see their account details. */}
+          <Route path="/account" element={
+            <ProtectedRoute allowedRoles={['guest', 'manager', 'admin']}>
+              <UserAccount />
+            </ProtectedRoute>
+          } />
+          <Route path="/recentvisit" element={
+            <ProtectedRoute allowedRoles={['guest', 'manager', 'admin']}>
+              <RecentVisit />
+            </ProtectedRoute>
+          } />
 
-        {/* --- Dashboards (Role-Based) --- */}
-        {/* Manager Dashboard - Only managers and admins can access */}
-        <Route path="/manager" element={
-          <ProtectedRoute allowedRoles={['manager', 'admin']}>
-            <ManagerDashboard />
-          </ProtectedRoute>
-        } />
-        
-        {/* Add Hotel - Only managers and admins can access */}
-        <Route path="/add-hotel" element={
-          <ProtectedRoute allowedRoles={['manager', 'admin']}>
-            <AddHotel />
-          </ProtectedRoute>
-        } />
-        
-        {/* Review Management - Only managers and admins can access */}
-        <Route path="/reviews" element={
-          <ProtectedRoute allowedRoles={['manager', 'admin']}>
-            <ReviewManagement />
-          </ProtectedRoute>
-        } />
-        
-        {/* Admin Dashboard - Only admins can access */}
-        <Route path="/admin" element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        } />
-        
-        {/* Admin Review Dashboard - Only admins can access */}
-        <Route path="/admin/reviews" element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminReviewDashboard />
-          </ProtectedRoute>
-        } />
+          {/* --- Dashboards (Role-Based) --- */}
+          {/* Manager Dashboard - ProtectedRoute ensures ONLY managers and admins can mount this component */}
+          <Route path="/manager" element={
+            <ProtectedRoute allowedRoles={['manager', 'admin']}>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          } />
 
-        {/* --- Authentication Routes --- */}
-        <Route
-          path="/login"
-          element={
-            <Login
-              onSuccess={() => navigate("/")}
-              onSwitchToRegister={() => navigate("/register")}
-            />
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <Register
-              onSwitchToLogin={() => navigate("/login")}
-            />
-          }
-        />
+          {/* Add Hotel - Only managers and admins can access */}
+          <Route path="/add-hotel" element={
+            <ProtectedRoute allowedRoles={['manager', 'admin']}>
+              <AddHotel />
+            </ProtectedRoute>
+          } />
 
-        {/* --- Error Handling Routes --- */}
-        {/* Route for specific errors (e.g., booking failures) */}
-        <Route path="/error" element={<Error />} />
+          {/* Review Management - Only managers and admins can access */}
+          <Route path="/reviews" element={
+            <ProtectedRoute allowedRoles={['manager', 'admin']}>
+              <ReviewManagement />
+            </ProtectedRoute>
+          } />
 
-        {/* Catch-all route for 404 - Page Not Found */}
-        <Route 
-          path="*" 
-          element={<Error message="The page you are looking for does not exist." />} 
-        />
+          {/* Admin Dashboard - Only admins can access */}
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Admin Review Dashboard - Only admins can access */}
+          <Route path="/admin/reviews" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminReviewDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* --- Authentication Routes --- */}
+          <Route
+            path="/login"
+            element={
+              <Login
+                onSuccess={() => navigate("/")}
+                onSwitchToRegister={() => navigate("/register")}
+              />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <Register
+                onSwitchToLogin={() => navigate("/login")}
+              />
+            }
+          />
+
+          {/* --- Error Handling Routes --- */}
+          {/* Route for specific errors (e.g., booking failures) */}
+          <Route path="/error" element={<Error />} />
+
+          {/* Catch-all route for 404 - Page Not Found */}
+          <Route
+            path="*"
+            element={<Error message="The page you are looking for does not exist." />}
+          />
         </Routes>
       </div>
     </ErrorBoundary>

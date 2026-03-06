@@ -1,10 +1,10 @@
-import express from "express";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from 'url';
-import { connectDB } from "./config/db.js";
-import cors from "cors";
-import helmet from "helmet";
+import express from "express"; // Core framework for building the backend server
+import dotenv from "dotenv"; // Module to load environment variables from a .env file
+import path from "path"; // Node.js utility for resolving folder and file paths
+import { fileURLToPath } from 'url'; // Utility to handle ES module file paths
+import { connectDB } from "./config/db.js"; // Our custom function to connect to MongoDB
+import cors from "cors"; // Middleware to allow frontend (localhost:5173) to talk to backend
+import helmet from "helmet"; // Security middleware to protect HTTP headers
 import rateLimit from "express-rate-limit";
 import hotelRouter from "./routes/hotel.routes.js";
 import authRouter from "./routes/auth.routes.js";
@@ -18,21 +18,29 @@ import managerRouter from "./routes/manager.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 
 // Load global .env from project root
+// Since we are using modern "ES Modules" (import/export), __dirname isn't available by default.
+// These two lines recreate __dirname so we can point dotenv to the root folder's .env file.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const app = express();
-const PORT = process.env.PORT || 5600;
+const app = express(); // Initialize the Express application
+const PORT = process.env.PORT || 5600; // Use port from .env, or fallback to 5600
 
-// Connect Database 
+// Connect to the MongoDB Database
 connectDB();
 
-// Middlewares
+// ==========================================
+// MIDDLEWARES
+// Middlewares are functions that run before the request hits our routes.
+// ==========================================
+
+// Parse incoming request bodies in JSON format (so we can read req.body)
 app.use(express.json());
+// Parse URL-encoded data (like form submissions)
 app.use(express.urlencoded({ extended: false }));
 
-// security headers
+// Security headers: helmet protects the app from some well-known web vulnerabilities 
 app.use(helmet());
 
 // rate limiting
@@ -54,16 +62,21 @@ app.use(cors({
     credentials: true
 }));
 
-// Cookie parser
+// Cookie parser: Allows us to read JWT tokens stored securely in cookies
 import cookieParser from "cookie-parser";
 app.use(cookieParser());
 
-// Default route
+// Default fallback route to test if the server is alive
 app.get("/", (req, res) => {
     res.send("Server is running perfectly!!!");
 });
 
-// ✅ Mount the auth routes
+// ==========================================
+// API ROUTES
+// Mounting feature-specific route files to specific URL paths
+// ==========================================
+
+// ✅ Mount the auth routes for login/register
 app.use("/api/auth", authRouter);
 
 // Mount hotel endpoints
@@ -93,10 +106,15 @@ app.use("/api/manager", managerRouter);
 // Mount admin endpoints
 app.use("/api/admin", adminRouter);
 
-// Global error handler
+// ==========================================
+// ERROR HANDLING
+// This global error handler catches any crashes in the routes and sends a clean JSON response
+// ==========================================
 app.use((err, req, res, next) => {
     console.error("Error:", err);
-    if (err && err.stack) console.error(err.stack);
+    if (err && err.stack) console.error(err.stack); // Print the error stack trace to terminal
+
+    // Send a safe, structured JSON error back to the frontend instead of an HTML crash page
     res.status(err.status || 500).json({
         success: false,
         message: err.message || "Server error"

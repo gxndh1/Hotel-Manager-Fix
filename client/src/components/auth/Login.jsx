@@ -84,18 +84,32 @@ const styles = {
   },
 };
 
+/**
+ * ==========================================
+ * Login Component
+ * ==========================================
+ * This component manages the user login screen. 
+ * It takes the user's email and password, sends it to the backend Node.js server,
+ * and if successful, saves the user's details inside the Redux Global Store so the whole app knows they are logged in.
+ */
 const Login = ({ onSuccess, onSwitchToRegister }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const navigate = useNavigate(); // React Router hook to change pages
+  const dispatch = useDispatch(); // Redux hook to send data into our global store
   const location = useLocation();
   const redirectTo = location?.state?.redirectTo;
   const messageFromState = location?.state?.message;
 
+  /**
+   * handleSubmit 
+   * Triggers when the user clicks the "Login" button.
+   * It prevents the page from refreshing (e.preventDefault), sends a POST request 
+   * to our backend API, and waits for a success/fail response.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -120,13 +134,14 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
           localStorage.setItem('token', token);
         }
 
+        // 🟢 Fire a Redux Action! This tells the whole React App "Hey, this user is currently logged in!"
         dispatch(login({ user }));
 
         if (onSuccess) onSuccess();
-        
+
         // Normalize role to lowercase for consistent comparison
         const normalizedRole = (user.Role || user.role || 'guest').toLowerCase();
-        
+
         if (redirectTo) {
           navigate(redirectTo);
         } else if (normalizedRole === "admin") {
