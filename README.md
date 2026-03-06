@@ -1,4 +1,4 @@
-# Smart Hotel Management System
+# Smart Hotel Booking System
 
 A comprehensive, full-stack Hotel Booking and Management System built with the MERN stack (MongoDB, Express.js, React, Node.js). This platform allows users to browse and book hotel rooms securely, provides a dedicated dashboard for hotel managers to oversee properties natively, and includes an admin panel for platform-wide control.
 
