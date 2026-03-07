@@ -5,26 +5,14 @@ import Hotel from '../models/hotel.model.js';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 
-// ==========================================
-// HELPER: Generate JWT Token
-// A JSON Web Token (JWT) is like a digital wristband. 
-// When a user logs in, we give them this token. They show it to us on future requests 
-// so we know they are authenticated without asking for their password again.
-// ==========================================
+// Generating JWT which sign id and role of the user
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET || 'smart_hotel_booking_system', {
-    expiresIn: process.env.JWT_EXPIRE || '7d', // Token expires in 7 days
+    expiresIn: process.env.JWT_EXPIRE || '7d',
   });
 };
 
-// ==========================================
-// CONTROLLER: Register User
-// This function handles new users signing up.
-// It checks if they already exist, validates their password, 
-// and then saves them securely into the MongoDB database.
-// @route   POST /api/auth/register
-// @access  Public (Anyone can access this)
-// ==========================================
+//User registration
 export const register = async (req, res) => {
   try {
     const { Name, Email, Password, ConfirmPassword, Role, ContactNumber } = req.body;
@@ -87,14 +75,7 @@ export const register = async (req, res) => {
   }
 };
 
-// ==========================================
-// CONTROLLER: Login User
-// This function verifies a user's email and password.
-// If correct, it generates a JWT token and sends it back to the user's browser 
-// securely hidden inside an HTTP-only Cookie.
-// @route   POST /api/auth/login
-// @access  Public
-// ==========================================
+//Login User
 export const login = async (req, res) => {
   try {
     const { Email, Password } = req.body;
@@ -110,6 +91,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    // Using matchPassword fn from user model to copare entered pass with hashed pass(passing password as the param)
     const isPasswordCorrect = await user.matchPassword(Password);
 
     if (!isPasswordCorrect) {

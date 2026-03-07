@@ -13,12 +13,12 @@ import { protect, authorize } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// Public routes
+// Public routes - Registration, Login, Logout
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', logout);
 
-// Protected routes - Get current user
+// Protected routes - Getting current user
 router.get('/me', protect, getMe);
 
 // Protected routes - Get user account data with bookings (using aggregation)

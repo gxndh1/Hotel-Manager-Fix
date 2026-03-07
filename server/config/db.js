@@ -10,20 +10,9 @@ export const connectDB = async () => {
     await mongoose.connect(process.env.MONGO_URL);
     console.log("Database has been connected!!");
 
-    // --------------------------------------------------------------------
+
     // Post-connection migration for user email index
-    // --------------------------------------------------------------------
-    // Historically the User schema used a lowercase `email` field and
-    // mongoose created a unique index named `email_1`. After renaming the
-    // property to `Email` the index remained, causing every document without
-    // an `email` field to collide on `null`. This manifested as a 11000 error
-    // "dup key: { email: null }" for *every* registration.
-    //
-    // The logic below is safe to run on every startup:
-    //   1. drop the legacy `email_1` index if it exists
-    //   2. copy `Email` into `email` for any document missing it (avoids
-    //      further null collisions and keeps backward compatibility)
-    //   3. create a new unique index on `Email`
+
     try {
       const userColl = mongoose.connection.collection('users');
       await userColl.dropIndex('email_1').catch(() => {});
