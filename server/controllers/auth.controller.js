@@ -12,7 +12,9 @@ const generateToken = (id, role) => {
   });
 };
 
-//User registration
+// @desc User registration
+// @route POST /api/auth/register 
+// @access Public
 export const register = async (req, res) => {
   try {
     const { Name, Email, Password, ConfirmPassword, Role, ContactNumber } = req.body;
@@ -75,7 +77,9 @@ export const register = async (req, res) => {
   }
 };
 
-//Login User
+// @desc Login User
+// @route POST api/auth/login
+// @access Public
 export const login = async (req, res) => {
   try {
     const { Email, Password } = req.body;
@@ -98,13 +102,17 @@ export const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    // Generating JWT which sign id and role of the user
     const token = generateToken(user._id, user.Role);
 
     // Send token as HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
+      //Production checks if your environment is in "production" (live on a real server). If it's live, secure is true
       secure: process.env.NODE_ENV === 'production',
+      //It dictates when the browser is allowed to automatically send the cookie to your server. Setting it to 'lax' tells the browser: "Only send this cookie if the user is navigating within our website
       sameSite: 'lax',
+      //lifespan of the cookie
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
 
@@ -127,9 +135,10 @@ export const login = async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Public
 export const logout = async (req, res) => {
+  // Deleting the cookie
   res.cookie('token', '', {
     httpOnly: true,
-    expires: new Date(0)
+    expires: new Date(0) // Past date given 1/1/1970 - Cookie expires immediately
   });
 
   return res.status(200).json({
@@ -138,15 +147,13 @@ export const logout = async (req, res) => {
   });
 };
 
-// ==========================================
+
 // CONTROLLER: Get Current User (Me)
-// This function runs whenever the frontend loads to check if the user is already logged in.
-// It uses the ID inside their Token to fetch their full profile from the database.
 // @route   GET /api/auth/me
 // @access  Private (Requires a valid token to access)
-// ==========================================
 export const getMe = async (req, res) => {
   try {
+    //gets users data excluding password
     const user = await User.findById(req.user.id).select('-Password');
 
     if (!user) {
@@ -166,11 +173,12 @@ export const getMe = async (req, res) => {
   }
 };
 
-// @desc    Get all users (admin only)
+// @desc    Get all users (accessed by admin only)
 // @route   GET /api/auth/users
 // @access  Private (admin)
 export const getAllUsers = async (req, res) => {
   try {
+    //getting all users except the password data
     const users = await User.find({}).select('-Password');
     return res.status(200).json({ success: true, data: users });
   } catch (error) {
@@ -185,7 +193,7 @@ export const getAllUsers = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { Name, ContactNumber, Address, City, Country, DateOfBirth } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.id; //user id sent from the protect middleware using the token
 
     if (!Name && !ContactNumber && !Address && !City && !Country && !DateOfBirth) {
       return res.status(400).json({
@@ -214,6 +222,7 @@ export const updateProfile = async (req, res) => {
       }
     }
 
+    //creating an object to store the updated data
     const updateData = {};
     if (Name) updateData.Name = Name;
     if (ContactNumber) updateData.ContactNumber = ContactNumber;
@@ -222,6 +231,8 @@ export const updateProfile = async (req, res) => {
     if (Country) updateData.Country = Country;
     if (DateOfBirth) updateData.DateOfBirth = DateOfBirth;
 
+
+    //updating the user data in the schema
     const user = await User.findByIdAndUpdate(
       userId,
       updateData,
@@ -347,22 +358,32 @@ export const changePassword = async (req, res) => {
 // @access  Private
 export const getUserAccountData = async (req, res) => {
   try {
+    //getting user id from the token
     const userId = req.user.id;
+    //converting user id to object id
     const objectId = new mongoose.Types.ObjectId(userId);
 
+    //using aggregation to get user data with bookings
     const accountData = await User.aggregate([
+      //matching the user id
       { $match: { _id: objectId } },
+      //excluding password and version info from the user data
       { $project: { Password: 0, __v: 0 } },
+      //lookup for bookings
       {
-        $lookup: {
+        $lookup: { //matches the user id with the booking id in the booking collection
+          //From booking collection 
           from: 'bookings',
+          //Local field is the user id
           localField: '_id',
+          //Foreign field is the user id in the booking collection
           foreignField: 'UserID',
+          //As bookings
           as: 'bookings'
         }
       },
       {
-        $unwind: {
+        $unwind: { //breaking the array into separe doc -> mongo doesnt recognise nested arrays
           path: '$bookings',
           preserveNullAndEmptyArrays: true
         }

@@ -1,13 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 
-// ==========================================
-// MIDDLEWARE: Protect Routes
-// This function acts like a "Bouncer" for our private APIs.
-// Before allowing a user to view their account or book a room, this runs first.
-// It checks if they have a valid JWT token in their cookies/headers.
-// If valid, it attaches their user profile to the request (req.user) and lets them in (`next()`).
-// ==========================================
+// Protect Routes
 export const protect = async (req, res, next) => {
   try {
     let token;
@@ -63,12 +57,8 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// ==========================================
-// MIDDLEWARE: Role Authorization
-// This function acts like a VIP list check.
-// It is used AFTER the `protect` middleware to ensure the logged-in user 
-// actually has permission to do an action (e.g. only "manager" can add hotels).
-// ==========================================
+
+// Role Authorization
 export const authorize = (...roles) => {
   return (req, res, next) => {
     // Normalize role to lowercase for comparison
